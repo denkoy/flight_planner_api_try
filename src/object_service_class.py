@@ -1,32 +1,34 @@
 import csv
 import os
-import storage
-from api_object import ApiObject
-from database import get_db_connection
+from src.api_object import ApiObject
+from src.database import get_db_connection
+
+
 class ObjectService:
+
     """Base service class with static methods for object management"""
 
     @staticmethod
-    def create_object(object, table):
-        dict = object.generate_dict()
+    def create_object(item_object: ApiObject, table: str):
+        item_dict = item_object.generate_dict()
 
         try:
-            name = dict["name"]
-        except:
+            name = item_dict["name"]
+        except KeyError:
             raise (KeyError("Cannot create object without a name!"))
 
         try:
-            id = dict["id"]
-        except:
-            id = None
+            item_id = item_dict["id"]
+        except KeyError:
+            item_id = None
 
-        city_id = dict.get("city_id", None)
+        city_id = item_dict.get("city_id", None)
 
-        if id is None:
+        if item_id is None:
             latest_id = ObjectService.get_latest_id(table)
             latest_id += 1
         else:
-            latest_id = id
+            latest_id = item_id
         connection = get_db_connection()
         cursor = connection.cursor()
         try:
@@ -43,16 +45,16 @@ class ObjectService:
         finally:
             connection.close()
 
-        object.set_all_to_none()
-        object.create_from_dict(to_return)
-        return object
+        item_object.set_all_to_none()
+        item_object.create_from_dict(to_return)
+        return item_object
 
     @staticmethod
-    def initialize_database(table):
+    def initialize_database(table: str):
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
         if table == "cities":
-            file_path = os.path.join(base_dir, "csvs", "cities.csv")
+            file_path = os.path.join(base_dir, "../csvs", "cities.csv")
             try:
                 with open(file_path, "r") as city_file:
                     connection = get_db_connection()
@@ -73,7 +75,7 @@ class ObjectService:
                     connection.close()
 
         elif table == "airports":
-            file_path = os.path.join(base_dir, "csvs", "airports.csv")
+            file_path = os.path.join(base_dir, "../csvs", "airports.csv")
             try:
                 with open(file_path, "r") as airport_file:
                     connection = get_db_connection()
@@ -95,7 +97,7 @@ class ObjectService:
                     connection.close()
 
         elif table == "flights":
-            file_path = os.path.join(base_dir, "csvs", "flights.csv")
+            file_path = os.path.join(base_dir, "../csvs", "flights.csv")
             try:
                 with open(file_path, "r") as flight_file:
                     connection = get_db_connection()
@@ -114,7 +116,9 @@ class ObjectService:
                             travel_time,
                         ) = row
                         cursor.execute(
-                            "INSERT OR IGNORE INTO flights (id, name, departure_city, arrival_city, price, departure_time, arrival_time, travel_time) "
+                            "INSERT OR IGNORE INTO flights "
+                            "(id, name, departure_city, arrival_city, price, "
+                            "departure_time, arrival_time, travel_time) "
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                             (
                                 flight_id,
@@ -140,23 +144,23 @@ class ObjectService:
         return " "
 
     @staticmethod
-    def update_object(id, object, table):
-        dict = object.generate_dict()
+    def update_object(item_id: int, item_object: ApiObject, table: str):
+        item_dict = item_object.generate_dict()
 
         try:
-            obj = ObjectService.get_object(id, table).generate_dict()
+            obj = ObjectService.get_object(item_id, table).generate_dict()
 
-        except:
-            raise KeyError(f"Object with ID {id} is not in the current table!")
-        ObjectService.delete_object(id, table)
-        dict["id"] = obj["id"]
-        object.set_all_to_none()
-        object.create_from_dict(dict)
-        ObjectService.create_object(object, table)
+        except KeyError:
+            raise KeyError(f"Object with ID {item_id} is not in the current table!")
+        ObjectService.delete_object(item_id, table)
+        item_dict["id"] = obj["id"]
+        item_object.set_all_to_none()
+        item_object.create_from_dict(item_dict)
+        ObjectService.create_object(item_object, table)
         return " "
 
     @staticmethod
-    def update_all_objects(list_of_objects, table):
+    def update_all_objects(list_of_objects: [ApiObject], table: str):
         obj = [i.generate_dict() for i in ObjectService.get_all_objects(table)]
 
         if obj is not []:
@@ -165,13 +169,13 @@ class ObjectService:
         for value in list_of_objects:
             try:
                 ObjectService.create_object(value, table)
-            except:
+            except KeyError:
                 print("Item without name.")
 
         return " "
 
     @staticmethod
-    def get_latest_id(table):
+    def get_latest_id(table: str):
         connection = get_db_connection()
         cursor = connection.cursor()
         try:
@@ -182,7 +186,7 @@ class ObjectService:
             connection.close()
 
     @staticmethod
-    def get_all_objects(table):
+    def get_all_objects(table: str):
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute(f"SELECT * FROM {table}")
@@ -190,47 +194,47 @@ class ObjectService:
         connection.close()
         arr_of_objects = []
         for row in rows:
-            object = ApiObject()
-            object.set_all_to_none()
-            object.create_from_dict(dict(row))
-            arr_of_objects.append(object)
+            item_object = ApiObject()
+            item_object.set_all_to_none()
+            item_object.create_from_dict(dict(row))
+            arr_of_objects.append(item_object)
         return arr_of_objects
 
     @staticmethod
-    def get_object(id, table):
+    def get_object(item_id: int, table: str):
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (id,))
+        cursor.execute(f"SELECT * FROM {table} WHERE id = ?", (item_id,))
         row = cursor.fetchone()
         connection.close()
         if row is None:
-            raise KeyError(f"Object with ID {id} not found")
-        object = ApiObject()
-        object.set_all_to_none()
-        object.create_from_dict({key: value for key, value in dict(row).items() if value is not None})
+            raise KeyError(f"Object with ID {item_id} not found")
+        item_object = ApiObject()
+        item_object.set_all_to_none()
+        item_object.create_from_dict({key: value for key, value in dict(row).items() if value is not None})
 
-        return object
+        return item_object
 
     @staticmethod
-    def delete_object(id, table):
+    def delete_object(item_id: int, table: str):
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        cursor.execute(f"SELECT id FROM {table} WHERE id = ?", (id,))
+        cursor.execute(f"SELECT id FROM {table} WHERE id = ?", (item_id,))
         object_id = cursor.fetchone()
 
         if object_id is None:
             connection.close()
-            raise KeyError(f"No object found with id {id}")
+            raise KeyError(f"No object found with id {item_id}")
 
-        cursor.execute(f"DELETE FROM {table} WHERE id = ?", (id,))
+        cursor.execute(f"DELETE FROM {table} WHERE id = ?", (item_id,))
         connection.commit()
         connection.close()
 
         return " "
 
     @staticmethod
-    def delete_all_objects(table):
+    def delete_all_objects(table: str):
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute(f"DELETE FROM {table}")

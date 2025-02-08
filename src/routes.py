@@ -1,7 +1,8 @@
 from flask import request, jsonify, abort
-from services import CityService, AirportService, FlightService
-from tokens import ADMIN_TOKEN
-from api_object import ApiObject
+from src.services import CityService, AirportService, FlightService
+from src.tokens import ADMIN_TOKEN
+
+
 def admin_required(func):
     def wrapper(*args, **kwargs):
         token = request.headers.get("Authorization")
@@ -22,7 +23,8 @@ def register_routes(app):
         elif request.method == 'GET':
             try:
                 return jsonify([i.generate_dict() for i in CityService.get_all_cities()])
-            except Exception:
+            except Exception as e:
+                print(f"Unexpected error: {e}")
                 abort(404)
 
     @app.route('/cities/<int:city_id>', methods=['GET', 'DELETE'])
@@ -31,7 +33,8 @@ def register_routes(app):
         if request.method == 'GET':
             try:
                 return jsonify(CityService.get_city(city_id).generate_dict())
-            except Exception:
+            except Exception as e:
+                print(f"Unexpected error: {e}")
                 abort(404)
         elif request.method == 'DELETE':
             return jsonify(CityService.delete_city(city_id)), 204
@@ -51,6 +54,7 @@ def register_routes(app):
     def delete_all_flights():
         return jsonify(FlightService.delete_all_flights()), 204
     # Airport endpoints
+
     @app.route('/airports/', methods=['POST', 'PUT', 'GET'])
     @admin_required
     def manage_airports():
@@ -62,7 +66,8 @@ def register_routes(app):
             try:
                 print([i.generate_dict() for i in AirportService.get_all_airports()])
                 return jsonify([i.generate_dict() for i in AirportService.get_all_airports()])
-            except Exception:
+            except Exception as e:
+                print(f"Unexpected error: {e}")
                 abort(404)
 
     @app.route('/airports/<int:airport_id>', methods=['GET', 'PUT', 'DELETE'])
@@ -71,7 +76,8 @@ def register_routes(app):
         if request.method == 'GET':
             try:
                 return jsonify(AirportService.get_airport(airport_id).generate_dict())
-            except Exception:
+            except Exception as e:
+                print(f"Unexpected error: {e}")
                 abort(404)
         elif request.method == 'PUT':
             return jsonify(AirportService.update_airport(airport_id, request.json))
@@ -89,13 +95,14 @@ def register_routes(app):
             max_count = request.args.get('maxCount', default=50, type=int)
             sort_by = request.args.get('sortBy', default='departureTime', type=str)
             sort_order = request.args.get('sortOrder', default='ASC', type=str)
-            return jsonify([i.generate_dict() for i in FlightService.get_all_flights(offset, max_count, sort_by, sort_order)])
+            return jsonify([i.generate_dict() for i in FlightService.get_all_flights(offset,
+                                                                                     max_count, sort_by, sort_order)])
 
     @app.route('/flights/search', methods=['POST'])
     @admin_required
     def search_flights():
         search_criteria = request.json
-        list_of_flights=[i.generate_dict() for i in FlightService.search_flights(search_criteria)]
+        list_of_flights = [i.generate_dict() for i in FlightService.search_flights(search_criteria)]
         return jsonify(list_of_flights)
 
     @app.route('/flights/<int:flight_id>', methods=['GET', 'PUT', 'DELETE'])
@@ -107,6 +114,3 @@ def register_routes(app):
             return jsonify(FlightService.update_flight(flight_id, request.json))
         elif request.method == 'DELETE':
             return jsonify(FlightService.delete_flight(flight_id))
-
-
-

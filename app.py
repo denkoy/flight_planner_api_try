@@ -1,9 +1,10 @@
-from flask import Flask,request, jsonify
-from routes import register_routes
+from src.tokens import ADMIN_TOKEN
+from flask import Flask, request, jsonify
+from src.routes import register_routes
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-ADMIN_TOKEN = "123123123"
+
 
 def admin_required(func):
     def wrapper(*args, **kwargs):
@@ -20,9 +21,11 @@ def create_app():
     register_routes(app)
     return app
 
+
 def main():
     app = create_app()
     app.run(debug=True)
+
 
 if __name__ == '__main__':
     main()

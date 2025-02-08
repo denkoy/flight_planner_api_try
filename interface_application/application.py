@@ -1,12 +1,18 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import requests
-from tokens import ADMIN_TOKEN
-class FlightPlannerApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Flight Planner API")
+from src.tokens import ADMIN_TOKEN
 
+
+class FlightPlannerApp:
+    def __init__(self, _root):
+        self.root = _root
+        self.root.title("Flight Planner API")
+        self.endpoint_entry = None
+        self.json_entry = None
+        self.request_type = None
+        self.send_button = None
+        self.response_box = None
         self.create_widgets()
 
     def create_widgets(self):
@@ -76,6 +82,8 @@ class FlightPlannerApp:
         self.response_box.configure(state=tk.DISABLED)
 
 # Main application
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = FlightPlannerApp(root)

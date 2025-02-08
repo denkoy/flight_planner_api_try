@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/app.py" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/src/api_object.py" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/src/database.py" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/src/object_service_class.py" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/src/routes.py" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/src/services.py" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/tst/test_services.py" dialect="GenericSQL" />
+    <file url="PROJECT" dialect="SQLite" />
+  </component>
+</project>
